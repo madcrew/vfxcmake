@@ -82,13 +82,19 @@ macro(MAYA_SET_PLUGIN_PROPERTIES target)
             LINK_FLAGS "/export:initializePlugin /export:uninitializePlugin"
             COMPILE_DEFINITIONS "${_maya_DEFINES}")
     else()
-        set(_maya_DEFINES "${_maya_DEFINES}" LINUX LINUX_64)
+        set(_maya_DEFINES "${_maya_DEFINES}" LINUX _LINUX LINUX_64)
         set_target_properties( ${target} PROPERTIES
             PREFIX ""
             COMPILE_DEFINITIONS "${_maya_DEFINES}")
     endif()
 endmacro(MAYA_SET_PLUGIN_PROPERTIES)
 
+if (NOT DEFINED MAYA_LOCATION)
+    if (NOT DEFINED ENV{MAYA_LOCATION})
+        message(FATAL_ERROR "You must set MAYA_LOCATION!")
+    endif()
+    set(MAYA_LOCATION $ENV{MAYA_LOCATION})
+endif()
 
 set(_maya_TEST_VERSIONS)
 set(_maya_KNOWN_VERSIONS "2008" "2009" "2010" "2011" "2012" "2013" "2014")
@@ -142,18 +148,17 @@ endforeach(version)
 
 # search for maya executable within the MAYA_LOCATION and PATH env vars and test paths
 find_program(MAYA_EXECUTABLE maya
-    PATHS $ENV{MAYA_LOCATION} ${_maya_TEST_PATHS}
+    PATHS ${MAYA_LOCATION} ${_maya_TEST_PATHS}
     PATH_SUFFIXES bin
-    NO_SYSTEM_ENVIRONMENT_PATH
+    NO_DEFAULT_PATH
     DOC "Maya's executable path")
 
 if(MAYA_EXECUTABLE)
     # TODO: use GET_FILENAME_COMPONENT here
     # derive MAYA_LOCATION from MAYA_EXECUTABLE
+
     string(REGEX REPLACE "/bin/maya.*" "" MAYA_LOCATION "${MAYA_EXECUTABLE}")
-
     string(REGEX MATCH "20[0-9][0-9]" MAYA_VERSION "${MAYA_LOCATION}")
-
     if(Maya_FIND_VERSION)
         # test that we've found a valid version
         list(FIND _maya_TEST_VERSIONS ${MAYA_VERSION} _maya_FOUND_INDEX)
@@ -199,7 +204,6 @@ endif()
 # - If the maya executable is found in a standard location, or in $MAYA_LOCATION/bin or $PATH, and the
 #   includes and libs are in standard locations relative to the binary, they will be found
 
-message(STATUS "Maya location: ${MAYA_LOCATION}")
 
 find_path(MAYA_INCLUDE_DIRS maya/MFn.h
     HINTS ${MAYA_LOCATION}

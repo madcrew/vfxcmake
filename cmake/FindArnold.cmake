@@ -12,13 +12,20 @@
 #  Output variables of the form ARNOLD_FOO
 #
 
+if (NOT DEFINED ARNOLD_HOME)
+    if (NOT DEFINED ENV{ARNOLD_HOME})
+        message(FATAL_ERROR "You must set ARNOLD_HOME!")
+    endif()
+    set(ARNOLD_HOME $ENV{ARNOLD_HOME})
+endif()
+
 find_library(ARNOLD_LIBRARY
     NAMES ai
-    PATHS $ENV{ARNOLD_HOME}/bin
+    PATHS ${ARNOLD_HOME}/bin
     DOC "Arnold library")
 
 find_path(ARNOLD_INCLUDE_DIR ai.h
-    PATHS $ENV{ARNOLD_HOME}/include
+    PATHS ${ARNOLD_HOME}/include
     DOC "Arnold include path")
 
 include(FindPackageHandleStandardArgs)
